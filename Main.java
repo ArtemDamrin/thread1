@@ -1,75 +1,46 @@
-import java.io.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.util.*;
 
 public class Main {
 
-    public static void saveGame(GameProgress save, String way) {
-        try (FileOutputStream fos = new FileOutputStream(way);
-             ObjectOutputStream cos = new ObjectOutputStream(fos)) {
-            cos.writeObject(save);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+    public static void main(String[] args) throws InterruptedException {
+        String[] texts = new String[25];
+        for (int i = 0; i < texts.length; i++) {
+            texts[i] = generateText("aab", 30_000);
         }
-    }
 
-    public static void newFile(File file) {
-        try {
-            if (file.createNewFile()) {
-                System.out.println("Файл " + file.getName() + " создан");
-            }
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
-
-    public static void zipFiles(String wayToZip, String[] arr) {
-        try (ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(wayToZip))) {
-            for (String wayToFile : arr) {
-                try (FileInputStream fis = new FileInputStream(wayToFile)) {
-                    ZipEntry entry = new ZipEntry(wayToFile);
-                    zout.putNextEntry(entry);
-                    byte[] buffer = new byte[fis.available()];
-                    fis.read(buffer);
-                    zout.write(buffer);
-                    zout.closeEntry();
-                } catch (Exception ex) {
-                    System.out.println(ex.getMessage());
+        long startTs = System.currentTimeMillis(); // start time
+        for (String text : texts) {
+            int maxSize = 0;
+            for (int i = 0; i < text.length(); i++) {
+                for (int j = 0; j < text.length(); j++) {
+                    if (i >= j) {
+                        continue;
+                    }
+                    boolean bFound = false;
+                    for (int k = i; k < j; k++) {
+                        if (text.charAt(k) == 'b') {
+                            bFound = true;
+                            break;
+                        }
+                    }
+                    if (!bFound && maxSize < j - i) {
+                        maxSize = j - i;
+                    }
                 }
             }
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.out.println(text.substring(0, 100) + " -> " + maxSize);
         }
+        long endTs = System.currentTimeMillis(); // end time
+
+        System.out.println("Time: " + (endTs - startTs) + "ms");
     }
 
-    public static void main(String[] args) {
-
-        GameProgress save1 = new GameProgress(30, 2, 10, 100);
-        GameProgress save2 = new GameProgress(31, 3, 20, 200);
-        GameProgress save3 = new GameProgress(32, 4, 30, 300);
-
-        File save1File = new File("C:\\Games\\saveGames", "save1.dat");
-        newFile(save1File);
-
-        File save2File = new File("C:\\Games\\saveGames", "save2.dat");
-        newFile(save2File);
-
-        File save3File = new File("C:\\Games\\saveGames", "save3.dat");
-        newFile(save3File);
-
-        saveGame(save1, "C:\\Games\\saveGames\\save1.dat");
-        saveGame(save2, "C:\\Games\\saveGames\\save2.dat");
-        saveGame(save3, "C:\\Games\\saveGames\\save3.dat");
-
-        String[] savesList = new String[3];
-        savesList[0] = "C:\\Games\\saveGames\\save1.dat";
-        savesList[1] = "C:\\Games\\saveGames\\save2.dat";
-        savesList[2] = "C:\\Games\\saveGames\\save3.dat";
-
-        zipFiles("C:\\Games\\saveGames\\zip.zip", savesList);
-
-        save1File.delete();
-        save2File.delete();
-        save3File.delete();
+    public static String generateText(String letters, int length) {
+        Random random = new Random();
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            text.append(letters.charAt(random.nextInt(letters.length())));
+        }
+        return text.toString();
     }
 }
